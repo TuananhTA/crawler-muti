@@ -1,0 +1,13 @@
+{
+    "connect":{
+        "url" : "http://127.0.0.1:50325",
+        "tiktok": "k10ewhv8",
+        "etsy" : "k108l0rp",
+        "shopee" : "k10aa54f"
+    },
+    "apis" : {
+        "open" : "/api/v2/browser-profile/start",
+        "close" : "/api/v2/browser-profile/stop",
+        "check" : "/api/v2/browser-profile/active"
+    }
+}

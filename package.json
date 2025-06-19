@@ -1,0 +1,22 @@
+{
+  "name": "seach-muti-platforms",
+  "version": "1.0.0",
+  "description": "Hello World!",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron src/main.js"
+  },
+  "devDependencies": {
+    "electron": "^36.4.0",
+    "electron-reload": "^2.0.0-alpha.1"
+  },
+  "dependencies": {
+    "axios": "^1.10.0",
+    "module-alias": "^2.2.3"
+  },
+  "_moduleAliases": {
+    "@root": "src",
+    "@renderer": "src/renderer",
+    "@assets": "src/renderer/assets"
+  }
+}
