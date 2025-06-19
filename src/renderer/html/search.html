@@ -1,19 +1,81 @@
 <!DOCTYPE html>
 <html lang="vi">
-    <head>
-        <meta charset="UTF-8"/>
-        <title>Hello from Electron renderer!</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-    </head>
-    <body>
-       <header>Day la header</header>
-       <main class="container">
-         <div class="flex justify-center flex-col items-center">
-              <div>
-                <label for="url">Page B</label>
-                <input type="text" class="outline-none border-2 border-gray-700 p-2 text-base">
-           </div>
-         </div>
-       </main>
-    </body>
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tìm kiếm sản phẩm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media (max-width: 640px) {
+            .grid-cols-1 {
+                grid-template-columns: repeat(1, 1fr);
+            }
+        }
+    </style>
+</head>
+<body class="bg-white min-h-screen">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Search Section -->
+        <div class="mb-8">
+            <div class="max-w-xl mx-auto">
+                <div class="relative">
+                    <input type="text" 
+                           id="searchInput"
+                           placeholder="Tìm kiếm sản phẩm..." 
+                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-base transition-all">
+                    <button id="searchButton" 
+                            class="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-500 text-white px-4 py-1.5 rounded-lg hover:bg-blue-600 transition duration-200 text-sm font-medium">
+                        Tìm kiếm
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products grid -->
+        <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+            <!-- Product card template -->
+            <template id="productTemplate">
+                <div class="bg-white hover:shadow-lg transition-shadow duration-200 rounded-xl overflow-hidden border border-gray-100">
+                    <a href="" target="_blank" class="block">
+                        <div class="relative pb-[100%]">
+                            <img src="" alt="Product" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-3">
+                            <h3 class="text-sm text-gray-800 line-clamp-2 min-h-[2.5rem]"></h3>
+                            <div class="mt-2 space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-red-500 font-medium text-base"></span>
+                                    <span class="text-xs text-gray-500 origin-tag px-2 py-0.5 rounded-full bg-gray-50"></span>
+                                </div>
+                                <div class="flex items-center text-xs text-gray-500">
+                                    <span>Đã bán: <span class="sold font-medium"></span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </template>
+        </div>
+
+        <!-- Loading indicator (moved below products grid) -->
+        <div id="loading" class="hidden">
+            <div class="flex justify-center items-center h-24">
+                <div class="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
+            </div>
+        </div>
+
+        <!-- Xem thêm button -->
+        <div class="flex justify-center mt-4">
+            <button id="loadMoreButton" class="hidden bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition duration-200 text-base font-medium">Xem thêm</button>
+        </div>
+
+        <!-- No results message -->
+        <div id="noResults" class="hidden">
+            <div class="text-center py-12">
+                <p class="text-gray-500 text-sm">Không tìm thấy sản phẩm nào</p>
+            </div>
+        </div>
+    </div>
+    <script src="./search.js"></script>
+</body>
 </html>

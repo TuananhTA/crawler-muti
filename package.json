@@ -7,12 +7,14 @@
     "start": "electron src/main.js"
   },
   "devDependencies": {
+    "@playwright/test": "^1.53.1",
     "electron": "^36.4.0",
     "electron-reload": "^2.0.0-alpha.1"
   },
   "dependencies": {
     "axios": "^1.10.0",
-    "module-alias": "^2.2.3"
+    "module-alias": "^2.2.3",
+    "playwright": "^1.53.1"
   },
   "_moduleAliases": {
     "@root": "src",

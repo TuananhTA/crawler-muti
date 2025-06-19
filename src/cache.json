@@ -1,9 +1,9 @@
 {
     "connect":{
-        "url" : "http://127.0.0.1:50325",
+        "url" : "http://local.adspower.net:60722",
         "tiktok": "k10ewhv8",
         "etsy" : "k108l0rp",
-        "shopee" : "k10aa54f"
+        "shopee" : "k10ewhv8"
     },
     "apis" : {
         "open" : "/api/v2/browser-profile/start",

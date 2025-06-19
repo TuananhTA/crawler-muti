@@ -35,6 +35,7 @@ const connect = async () => {
     }
 
 
+    // Hiển thị loading
     connectButton.disabled = true;
     connectButton.innerHTML = `
         <div class="flex items-center space-x-2">
@@ -42,23 +43,42 @@ const connect = async () => {
             <span>Đang kết nối...</span>
         </div>
     `;
-    const response = await ipc.sendConnectData({ etsy, tiktok, shopee, url })
-    
-    if(!response.status){
-        connectButton.innerText = "Kết nối"
-        showToast("Kết nối thất bại. Kiểm tra lại thông tin!")
-        return;
-    }
-    connectButton.innerText = "Thành công!"
-    let error = [];
 
-    if(!response.tiktok) error.push("Tiktok lỗi!")
-    if(!response.etsy) error.push("Etsy lỗi!")
-    if(!response.shopee) error.push("Shopee lỗi!")
-    
-    if(error.length > 0) {
-        document.getElementById('error-connect').innerText = error.join(" ")
-    }    
+    try {
+        const response = await ipc.sendConnectData({ etsy, tiktok, shopee, url });
+
+        console.log("🧪 Dữ liệu kết nối:", response); // THÊM DÒNG NÀY
+
+        if (!response.status) {
+            connectButton.disabled = false;
+            connectButton.innerText = "Kết nối";
+            showToast("Kết nối thất bại. Kiểm tra lại thông tin!", "red", 2000);
+            return;
+        }
+
+        // Xử lý khi kết nối thành công
+        connectButton.innerText = "Thành công!";
+        showToast("Kết nối thành công!", "green", 1000);
+
+        let error = [];
+        if (!response.tiktok) error.push("Tiktok lỗi!");
+        if (!response.etsy) error.push("Etsy lỗi!");
+        if (!response.shopee) error.push("Shopee lỗi!");
+
+        if (error.length > 0) {
+            document.getElementById('error-connect').innerText = error.join(" ");
+        }
+
+        // Đợi 1 giây rồi chuyển trang
+        setTimeout(() => {
+            window.location.href = './html/search.html';
+        }, 1000);
+
+    } catch (error) {
+        connectButton.disabled = false;
+        connectButton.innerText = "Kết nối";
+        showToast("Có lỗi xảy ra: " + error.message, "red", 2000);
+    }
 };
 
 const loadCache = async () => {

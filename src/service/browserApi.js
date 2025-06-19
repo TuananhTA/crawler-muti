@@ -104,11 +104,16 @@ class BrowserApi {
         const array = [...this.profileContext];
         console.log("🧹 Closing all profiles:", array);
 
-        const promises = array.map(id =>
-            this.close(id, this.baseUrl).then(() => delay(1000))
-        );
-        await Promise.allSettled(promises);
-
+        for (const profileId of array) {
+            try {
+                await this.close(profileId);
+                console.log(`✅ Closed profile: ${profileId}`);
+            } catch (error) {
+                console.error(`❌ Error closing profile ${profileId}:`, error.message);
+            }
+            delay(1000); 
+        }
+        console.log(this.profileContext)
         this.profileContext.clear();
         console.log("✅ All profiles closed.");
     }
