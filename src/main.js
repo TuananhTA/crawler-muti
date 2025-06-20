@@ -51,7 +51,6 @@ app.whenReady().then(() => {
     setupConnectHandler(ipcMain);
 
     productQueueInstance.onPush((product) => {
-        console.log("📦 New product added to queue:", product);
         if (win && !win.isDestroyed()) {
             win.webContents.send('new-product', product);
         }

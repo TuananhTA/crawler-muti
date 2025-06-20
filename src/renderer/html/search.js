@@ -7,6 +7,8 @@ const productTemplate = document.getElementById("productTemplate");
 const loading = document.getElementById("loading");
 const noResults = document.getElementById("noResults");
 const loadMoreButton = document.getElementById("loadMoreButton");
+let currentPage = 1;
+let tiktokCount = 0;
 
 // Sample data
 const sampleProducts = [
@@ -34,6 +36,18 @@ function showLoading(show) {
   if (loadMoreButton) loadMoreButton.classList.toggle("hidden", show);
 }
 
+function getPlatforms(origin) {
+  
+  const checkedPlatforms = document.querySelectorAll('input[name="platforms"]:checked');
+
+  const platforms = [];
+
+  checkedPlatforms.forEach((checkbox) => {
+    platforms.push(checkbox.value);
+  })
+
+  return platforms;
+}
 function showNoResults(show) {
   noResults.classList.toggle("hidden", !show);
   productsGrid.classList.toggle("hidden", show);
@@ -67,13 +81,26 @@ function pushProduct(product) {
 
 searchButton.addEventListener("click", async () => {
   const query = searchInput.value.trim();
+
+  currentPage = 1;
+  tiktokCount = 0; 
+
+  const platforms = getPlatforms();
+  console.log("Selected platforms:", platforms);
+
   if (!query) return;
   clearProducts();
   showNoResults(false);
   showLoading(true);
+
   try {
     console.log("Searching for:", query);
-    const response = await ipc.search(query);
+
+    const data = {
+      keyword: query,
+      platforms: platforms,
+    }
+    const response = await ipc.search(data);
     // No need to render products array, products will be pushed one by one
     if (response && response.length === 0) {
       showNoResults(true);
@@ -87,10 +114,26 @@ searchButton.addEventListener("click", async () => {
 });
 
 loadMoreButton.addEventListener("click", async () => {
+
+  currentPage++;
+
+  const query = searchInput.value.trim();
+  if (!query) return;
+
+  const platforms = getPlatforms();
+  console.log("Selected platforms:", platforms);
+
   showNoResults(false);
   showLoading(true);
   try {
-    const response = await ipc.loadMore();
+
+    const data = {
+      keyword: query,
+      pageNumber: currentPage,
+      tiktokCount: tiktokCount,
+      platforms: platforms,
+    }
+    const response = await ipc.loadMore(data);
     if (response && response.length === 0) {
       showNoResults(true);
     }
@@ -106,7 +149,9 @@ loadMoreButton.addEventListener("click", async () => {
 
 
 ipc.onNewProduct((product) => {
-  console.log("New product received:", product);
+  if(product.origin === "TIKTOK") {
+    tiktokCount++;
+  }
   pushProduct(product);
 });
 

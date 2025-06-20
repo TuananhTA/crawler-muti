@@ -1,7 +1,7 @@
 const cacheContext = require('../service/readCache');
 const browserApi = require('../service/browserApi');
 const browserContext = require('../crawler/browser');
-const { tiktokCrawler, etsyCrawler, shopeeCrawler } = require('../crawler/crawler');
+const { tiktokCrawler, etsyCrawler, shopeeCrawler, crawlerMap } = require('../crawler/crawler');
 const delay = require('../hepler/delay');
 
 function setupConnectHandler(ipcMain) {
@@ -91,16 +91,17 @@ function getDefaultCacheData() {
 
 
 
-async function handleSearch(event, keyword) {
+async function handleSearch(event, data) {
     try {
-        console.log("🔍 Searching for:", keyword);
-        // Run all crawlers in parallel and wait for all to finish
-        await Promise.all([
-            tiktokCrawler.crawl(keyword),
-            etsyCrawler.crawl(keyword),
-            shopeeCrawler.crawl(keyword)
-        ]);
+        console.log("🔍 Searching for:", data);
 
+        const tasks = data.platforms
+                .map(key => crawlerMap.get(key))    // lấy crawler theo key
+                .filter(Boolean)                    // bỏ undefined nếu key không tồn tại
+                .map(crawler => crawler.crawl(data.keyword));
+
+        // Run all crawlers in parallel and wait for all to finish
+        await Promise.all(tasks);
         return true;
     } catch (error) {
         console.error("❌ Search error:", error);
@@ -108,8 +109,30 @@ async function handleSearch(event, keyword) {
     }
 }
 
-async function handleLoadMore() {
-    console.log("load-more")
+async function handleLoadMore(event, data) {
+
+     try {
+        console.log("🔍 Searching for:", data.keyword);
+
+        const tasks = data.platforms
+                .map(key => crawlerMap.get(key))    // lấy crawler theo key
+                .filter(Boolean)                    // bỏ undefined nếu key không tồn tại
+                .map(crawler => {
+                    if( crawler.key === 'key/tiktok' ) {
+                        return crawler.crawl(data.keyword, data.tiktokCount);
+                    }else {
+                        return crawler.crawl(data.keyword, data.pageNumber);
+                    }
+                });
+
+        // Run all crawlers in parallel and wait for all to finish
+        await Promise.all(tasks);
+        return true;
+    } catch (error) {
+        console.error("❌ Search error:", error);
+        return false;
+    }
+
 }
 
 module.exports = { setupConnectHandler };

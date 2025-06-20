@@ -1,5 +1,7 @@
 const { tiktokSearch, shopeeSearch , etsySearch } = require('../service/product');
 
+const crawlerMap = new Map();
+ 
 class Crawler{
 
     constructor( key ) {
@@ -7,15 +9,15 @@ class Crawler{
         this.page = null;
         this.key  = key
         this.search = null;
+        crawlerMap.set(key, this);
     }
 
     async initialize( browserContext, url ) {
         this.page = await browserContext.getPage(this.key, url);
     }
 
-    async crawl( keyword ) {
-        console.log(this.search)
-        return this.search( keyword, this);
+    async crawl( keyword, pageNumber = 0) {
+        return this.search( keyword, this, pageNumber);
     }
 
     setSearch( searchFunction ) {
@@ -48,9 +50,9 @@ shopeeCrawler.setSearch(shopeeSearch);
 
 
 
-
 module.exports = {
     tiktokCrawler,
     etsyCrawler,
-    shopeeCrawler  
+    shopeeCrawler,
+    crawlerMap  
 }
