@@ -10,7 +10,13 @@ function setupConnectHandler(ipcMain) {
     ipcMain.handle("load-data-cache", handleLoadCache);
     ipcMain.handle("search-products", handleSearch);
     ipcMain.handle("load-more", handleLoadMore);
+    ipcMain.handle("get-details", handleDetails);
+    
 
+}
+async function handleDetails(event, data) {
+    const crawler = crawlerMap.get(data.key);
+    return await crawler.getDetails(data.link);
 }
 
 async function handleConnect(event, data) {

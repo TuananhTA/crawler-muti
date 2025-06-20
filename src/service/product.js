@@ -329,6 +329,7 @@ async function getProductEtsy(productElement) {
         sold,
         price,
         origin: "ETSY",
+        id: "key/etsy",
       };
     } catch (error) {
       return null;
@@ -364,6 +365,7 @@ async function getProductShopee(productElement) {
         sold,
         price,
         origin: "SHOPEE",
+        id: "key/shopee",
       };
     } catch (error) {
       return null;
@@ -390,7 +392,8 @@ async function getProductTiktok(productElement) {
         link,
         sold,
         price,
-        origin: "TIKTOK"
+        origin: "TIKTOK",
+        id: "key/tiktok",
       };
     } catch (error) {
       return null;

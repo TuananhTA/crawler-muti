@@ -45,7 +45,7 @@ class Browser {
     if (this.pages.has(key)) return (page = this.pages.get(key))
 
     else {
-      const context = this.browsers.get(key).contexts()[0];
+      const context = this.browsers?.get(key)?.contexts()[0] || null;
       if (!context) {
         throw new Error(`No context found for profile: ${key}`);
       }

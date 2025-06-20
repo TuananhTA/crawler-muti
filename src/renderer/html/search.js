@@ -62,8 +62,6 @@ function clearProducts() {
 function pushProduct(product) {
   showNoResults(false);
   const clone = productTemplate.content.cloneNode(true);
-  const productLink = clone.querySelector("a");
-  productLink.href = product.link;
   const img = clone.querySelector("img");
   img.src = product.img;
   img.alt = product.title;
@@ -73,6 +71,25 @@ function pushProduct(product) {
   const originTag = clone.querySelector(".origin-tag");
   originTag.textContent = product.origin;
   originTag.className = `origin-tag text-xs font-medium px-2 py-0.5 rounded-full ${getOriginClass(product.origin)}`;
+
+  const productCard = clone.querySelector(".product-item");
+
+  productCard.addEventListener("click",  async () => {
+    const data = {
+      key: product.id,
+      link: product.link
+    }
+    const response = await ipc.getDetails(data);
+    console.log(response)
+    
+    const  cloneProduct = {...product, images: response }
+    showProductModal(cloneProduct);
+    
+  });
+
+
+
+
   productsGrid.appendChild(clone);
   if (loadMoreButton && loading.classList.contains("hidden")) {
     loadMoreButton.classList.remove("hidden");
@@ -159,4 +176,47 @@ searchInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") {
     searchButton.click();
   }
+});
+
+function showProductModal(product) {
+  const modal = document.getElementById("productModal");
+  const imagesContainer = document.getElementById("productImages");
+  const titleEl = document.getElementById("productTitle");
+  const priceEl = document.getElementById("productPrice");
+  const originEl = document.getElementById("productOrigin");
+  const soldEl = document.getElementById("productSold");
+  const shopEl = document.getElementById("productShop");
+  const locationEl = document.getElementById("productLocation");
+  const descEl = document.getElementById("productDescription");
+  const linkEl = document.getElementById("productLink");
+
+  // Ảnh
+  imagesContainer.innerHTML = '';
+  (product.images || []).forEach(src => {
+    const img = document.createElement('img');
+    img.src = src;
+    img.className = "w-full h-24 object-cover rounded border";
+    imagesContainer.appendChild(img);
+  });
+
+  // Thông tin
+  titleEl.textContent = product.title || 'Không có tên';
+  priceEl.textContent = product.price || '—';
+  originEl.textContent = product.origin || '—';
+  soldEl.textContent = product.sold ? `Đã bán: ${product.sold}` : '';
+  if (product.link) {
+    linkEl.href = product.link;
+    linkEl.classList.remove('pointer-events-none', 'text-gray-400');
+  } else {
+    linkEl.href = '#';
+    linkEl.classList.add('pointer-events-none', 'text-gray-400');
+  }
+
+  // Hiện modal
+  modal.classList.remove("hidden");
+}
+
+// Đóng modal
+document.getElementById("closeModal").addEventListener("click", () => {
+  document.getElementById("productModal").classList.add("hidden");
 });

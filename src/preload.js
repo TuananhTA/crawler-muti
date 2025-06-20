@@ -9,12 +9,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
   getCache:async  () => await ipcRenderer.invoke("load-data-cache"), 
   search: async ( data ) => await ipcRenderer.invoke("search-products", data),
   loadMore: async (data) => await ipcRenderer.invoke("load-more", data),
+  getDetails: async (data) => await ipcRenderer.invoke("get-details", data),
 
   onNewProduct: (callback) => {
     ipcRenderer.on('new-product', (event, data) => {
-
-      console.log("📦 New product received in preload:", data);
-
       callback(data);
 
     });
