@@ -7,8 +7,24 @@ const productTemplate = document.getElementById("productTemplate");
 const loading = document.getElementById("loading");
 const noResults = document.getElementById("noResults");
 const loadMoreButton = document.getElementById("loadMoreButton");
+const platformsWrapper = document.getElementById('platformss');
 let currentPage = 1;
 let tiktokCount = 0;
+
+
+(async() =>{
+  const platforms = await ipc.getPlatforms();
+
+  platforms.forEach(item =>{
+    let itemHtml = 
+    `<label class="flex items-center gap-2 rounded-full border border-gray-300 cursor-pointer hover:bg-gray-100 transition
+        data-[checked=true]:bg-blue-500 data-[checked=true]:text-white">
+        <input type="checkbox" name="platforms" value="${item}" class="hidden peer" checked />
+        <span class="capitalize peer-checked:text-white peer-checked:bg-blue-500 px-3 py-1 rounded-full">${item.replace("key/", "")}</span>
+      </label>`
+    platformsWrapper.innerHTML += itemHtml;
+  })
+})()
 
 // Sample data
 const sampleProducts = [
@@ -75,20 +91,24 @@ function pushProduct(product) {
   const productCard = clone.querySelector(".product-item");
 
   productCard.addEventListener("click",  async () => {
-    const data = {
-      key: product.id,
-      link: product.link
+    const modalLoading = document.getElementById("modalLoading");
+    if (modalLoading) modalLoading.classList.remove("hidden");
+    try {
+      const data = {
+        key: product.id,
+        link: product.link
+      }
+      const response = await ipc.getDetails(data);
+      console.log("🧪 Product details:", response);
+      const cloneProduct = {...product, images: response }
+
+      showProductModal(cloneProduct);
+    } catch (e) {
+      alert("Không lấy được chi tiết sản phẩm!");
+    } finally {
+      if (modalLoading) modalLoading.classList.add("hidden");
     }
-    const response = await ipc.getDetails(data);
-    console.log(response)
-    
-    const  cloneProduct = {...product, images: response }
-    showProductModal(cloneProduct);
-    
   });
-
-
-
 
   productsGrid.appendChild(clone);
   if (loadMoreButton && loading.classList.contains("hidden")) {
@@ -185,19 +205,64 @@ function showProductModal(product) {
   const priceEl = document.getElementById("productPrice");
   const originEl = document.getElementById("productOrigin");
   const soldEl = document.getElementById("productSold");
-  const shopEl = document.getElementById("productShop");
-  const locationEl = document.getElementById("productLocation");
-  const descEl = document.getElementById("productDescription");
   const linkEl = document.getElementById("productLink");
+  // Copy button
+  const copyBtn = document.getElementById("copyTitleBtn");
+  const copyMsg = document.getElementById("copySuccessMsg");
+  // Zoom modal
+  const imageZoomModal = document.getElementById("imageZoomModal");
+  const zoomedImage = document.getElementById("zoomedImage");
+  const closeZoomModal = document.getElementById("closeZoomModal");
 
   // Ảnh
   imagesContainer.innerHTML = '';
-  (product.images || []).forEach(src => {
+  (product.images || []).forEach((src, idx) => {
+    const imgWrapper = document.createElement('div');
+    imgWrapper.className = 'relative group';
     const img = document.createElement('img');
     img.src = src;
-    img.className = "w-full h-24 object-cover rounded border";
-    imagesContainer.appendChild(img);
+    img.className = "w-full h-24 object-cover rounded border cursor-zoom-in";
+    // Click để zoom
+    img.onclick = function(e) {
+      e.stopPropagation();
+      zoomedImage.src = src;
+      imageZoomModal.classList.remove('hidden');
+    };
+    // Nút tải ảnh
+    const downloadBtn = document.createElement('button');
+    downloadBtn.textContent = 'Tải ảnh JPG';
+    downloadBtn.className = 'absolute bottom-1 right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition';
+    downloadBtn.onclick = async (e) => {
+      e.stopPropagation();
+      // Gửi yêu cầu tải về backend
+      try {
+        const r = await ipc.downloadImageAsJpg({ url: src, fileName: `image_${idx+1}.jpg` });
+        console.log(r);
+      } catch (err) {
+        alert('Không tải được ảnh!');
+      }
+    };
+    imgWrapper.appendChild(img);
+    imgWrapper.appendChild(downloadBtn);
+    imagesContainer.appendChild(imgWrapper);
   });
+
+  // Đóng modal zoom
+  if (closeZoomModal) {
+    closeZoomModal.onclick = function() {
+      imageZoomModal.classList.add('hidden');
+      zoomedImage.src = '';
+    };
+  }
+  // Đóng khi click nền tối
+  if (imageZoomModal) {
+    imageZoomModal.onclick = function(e) {
+      if (e.target === imageZoomModal) {
+        imageZoomModal.classList.add('hidden');
+        zoomedImage.src = '';
+      }
+    };
+  }
 
   // Thông tin
   titleEl.textContent = product.title || 'Không có tên';
@@ -211,6 +276,48 @@ function showProductModal(product) {
     linkEl.href = '#';
     linkEl.classList.add('pointer-events-none', 'text-gray-400');
   }
+
+  // Copy tên sản phẩm
+  if (copyBtn) {
+    copyBtn.onclick = async function() {
+      try {
+        await navigator.clipboard.writeText(product.title || '');
+        if (copyMsg) {
+          copyMsg.classList.remove('hidden');
+          setTimeout(() => copyMsg.classList.add('hidden'), 1200);
+        }
+      } catch (e) {
+        alert('Không thể copy!');
+      }
+    };
+  }
+
+  // Sau imagesContainer
+  const downloadAllBtnId = 'downloadAllImagesBtn';
+  let downloadAllBtn = document.getElementById(downloadAllBtnId);
+  if (!downloadAllBtn) {
+    downloadAllBtn = document.createElement('button');
+    downloadAllBtn.id = downloadAllBtnId;
+    downloadAllBtn.textContent = 'Tải tất cả ảnh JPG';
+    downloadAllBtn.className = 'mt-2 mb-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition block';
+    imagesContainer.parentElement.appendChild(downloadAllBtn);
+  }
+  downloadAllBtn.onclick = async () => {
+    if (!product.images || !product.images.length) return;
+    const images = product.images.map((url, i) => ({ url, fileName: `image_${i+1}.jpg` }));
+    try {
+      const result = await ipc.downloadMultiImagesAsJpg({ images });
+      if (result.success) {
+        alert('Đã tải xong tất cả ảnh!');
+      } else if (result.error === 'cancelled') {
+        // user cancelled
+      } else {
+        alert('Có lỗi khi tải ảnh!');
+      }
+    } catch (e) {
+      alert('Có lỗi khi tải ảnh!');
+    }
+  };
 
   // Hiện modal
   modal.classList.remove("hidden");

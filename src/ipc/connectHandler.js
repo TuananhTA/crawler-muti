@@ -3,6 +3,12 @@ const browserApi = require('../service/browserApi');
 const browserContext = require('../crawler/browser');
 const { tiktokCrawler, etsyCrawler, shopeeCrawler, crawlerMap } = require('../crawler/crawler');
 const delay = require('../hepler/delay');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const axios = require('axios');
+const { dialog, BrowserWindow } = require('electron');
+const Jimp = require('jimp');
 
 function setupConnectHandler(ipcMain) {
 
@@ -11,9 +17,15 @@ function setupConnectHandler(ipcMain) {
     ipcMain.handle("search-products", handleSearch);
     ipcMain.handle("load-more", handleLoadMore);
     ipcMain.handle("get-details", handleDetails);
-    
-
+    ipcMain.handle("download-image-as-jpg", handleDownloadImageAsJpg);
+    ipcMain.handle("download-multi-images-as-jpg", handleDownloadMultiImagesAsJpg);
+    ipcMain.handle("load-platforms", handleLoadPlatforms);
 }
+
+async function handleLoadPlatforms() {
+    return Array.from(crawlerMap.keys());
+}
+
 async function handleDetails(event, data) {
     const crawler = crawlerMap.get(data.key);
     return await crawler.getDetails(data.link);
@@ -139,6 +151,54 @@ async function handleLoadMore(event, data) {
         return false;
     }
 
+}
+
+async function handleDownloadImageAsJpg(event, { url, fileName }) {
+    try {
+        const win = BrowserWindow.getFocusedWindow();
+        const { canceled, filePath } = await dialog.showSaveDialog(win, {
+            title: 'Chọn nơi lưu ảnh',
+            defaultPath: fileName || 'image.jpg',
+            filters: [{ name: 'JPG Image', extensions: ['jpg', 'jpeg'] }]
+        });
+        if (canceled || !filePath) return { success: false, error: 'cancelled' };
+        const response = await axios.get(url, { responseType: 'arraybuffer' });
+        const image = await Jimp.read(response.data);
+        await image.quality(90).writeAsync(filePath);
+        return { success: true, path: filePath };
+    } catch (err) {
+        console.error('Lỗi tải/chuyển ảnh:', err);
+        return { success: false, error: err.message };
+    }
+}
+
+async function handleDownloadMultiImagesAsJpg(event, { images }) {
+    try {
+        const win = BrowserWindow.getFocusedWindow();
+        const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+            title: 'Chọn thư mục lưu ảnh',
+            properties: ['openDirectory']
+        });
+        if (canceled || !filePaths || !filePaths[0]) return { success: false, error: 'cancelled' };
+        const folder = filePaths[0];
+        const savedFiles = [];
+        for (let i = 0; i < images.length; ++i) {
+            const { url, fileName } = images[i];
+            try {
+                const response = await axios.get(url, { responseType: 'arraybuffer' });
+                const image = await Jimp.read(response.data);
+                const savePath = path.join(folder, fileName || `image_${i+1}.jpg`);
+                await image.quality(90).writeAsync(savePath);
+                savedFiles.push(savePath);
+            } catch (e) {
+                // Bỏ qua ảnh lỗi
+            }
+        }
+        return { success: true, files: savedFiles };
+    } catch (err) {
+        console.error('Lỗi tải nhiều ảnh:', err);
+        return { success: false, error: err.message };
+    }
 }
 
 module.exports = { setupConnectHandler };

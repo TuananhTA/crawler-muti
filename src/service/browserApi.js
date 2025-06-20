@@ -2,6 +2,11 @@ const axios = require('axios');
 const cacheContext = require('./readCache');
 const delay = require('../hepler/delay')
 
+ const headers = {
+   Authorization: "Bearer 3842895878470c759dff91f3a7887ad8", // Thêm header ở đây
+   "Content-Type": "application/json", // Có thể thêm nếu cần
+ };
+
 class BrowserApi {
 
     constructor() {
@@ -44,7 +49,7 @@ class BrowserApi {
         try {
 
             const apiMain = `${baseUrl}${api}`;
-            const response = await axios.post(apiMain, body);
+            const response = await axios.post(apiMain, body, { headers });
             this.profileContext.add(profileId)
             const ws = response?.data?.data?.ws?.puppeteer;
             return { ws };
@@ -72,7 +77,7 @@ class BrowserApi {
         try {
 
             const apiMain = `${baseUrl}${api}`;
-            await axios.post(apiMain, body);
+            await axios.post(apiMain, body, { headers });
             this.profileContext.delete(profileId)
             return true;
 
@@ -92,7 +97,7 @@ class BrowserApi {
         try {
 
             const apiMain = `${baseUrl}${api}?profile_id=${profile_id}`;
-            const response = await axios.get(apiMain);
+            const response = await axios.get(apiMain, { headers });
             return response.data;
 
         } catch (e) {

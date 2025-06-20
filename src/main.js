@@ -1,15 +1,10 @@
-require("module-alias/register");
+
 const path = require("path");
 const { app, BrowserWindow, ipcMain } = require("electron");
 const { setupConnectHandler } = require("./ipc/connectHandler");
 const browserApi = require("./service/browserApi");
 
 const productQueueInstance = require('./hepler/ProductQueue');
-
-require("electron-reload")(__dirname, {
-  electron: path.join(__dirname, "..", "node_modules", ".bin", "electron"),
-  watch: [path.join(__dirname, "./renderer"), __dirname],
-});
 
 const createWindow = () => {
   const win = new BrowserWindow({
